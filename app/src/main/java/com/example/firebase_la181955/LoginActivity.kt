@@ -3,10 +3,16 @@ package com.example.firebase_la181955
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -20,6 +26,7 @@ import com.google.firebase.auth.GoogleAuthProvider
 class LoginActivity : AppCompatActivity() {
     private lateinit var mGoogleSignInClient : GoogleSignInClient
     val Req_Code : Int = 123
+    private lateinit var callbackManager: CallbackManager
     private lateinit var auth : FirebaseAuth
     private lateinit var btnLogin : Button
     private lateinit var btnFacebook : Button
@@ -29,6 +36,7 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
+        callbackManager = CallbackManager.Factory.create()
         FirebaseApp.initializeApp(this)
 
         auth = FirebaseAuth.getInstance()
@@ -54,6 +62,28 @@ class LoginActivity : AppCompatActivity() {
         btnGoogle.setOnClickListener {
             signInGoogle()
         }
+
+        btnFacebook.setOnClickListener {
+            LoginManager.getInstance().logInWithReadPermissions(this, listOf("public_profile", "email"))
+        }
+
+        LoginManager.getInstance().registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onSuccess(result: LoginResult) {
+                Log.d("TAG", "Success Login")
+                val intent = Intent(this@LoginActivity, MainActivity::class.java)
+                intent.putExtra("tipoLogin", "facebook")
+                startActivity(intent)
+                finish()
+            }
+
+            override fun onCancel() {
+                Toast.makeText(this@LoginActivity, "Login cancelado", Toast.LENGTH_LONG).show()
+            }
+
+            override fun onError(error: FacebookException) {
+                Toast.makeText(this@LoginActivity, error.message, Toast.LENGTH_LONG).show()
+            }
+        })
     }
 
     private fun signInGoogle() {
@@ -63,11 +93,12 @@ class LoginActivity : AppCompatActivity() {
 
     // Datos de la cuenta de Google
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == Req_Code) {
             val task : Task<GoogleSignInAccount> = GoogleSignIn.getSignedInAccountFromIntent(data)
             handleResult(task)
         }
+        callbackManager.onActivityResult(requestCode, resultCode, data)
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun handleResult(completedTask : Task<GoogleSignInAccount>) {

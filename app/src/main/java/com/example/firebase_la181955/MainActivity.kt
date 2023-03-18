@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import com.facebook.login.LoginManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -44,6 +45,8 @@ class MainActivity : AppCompatActivity() {
                             finish()
                         }
                     }
+                } else if (tipoLogin == "facebook"){
+                    LoginManager.getInstance().logOut()
                 } else {
                     FirebaseAuth.getInstance().signOut().also {
                         Toast.makeText(this, "Sesión cerrada", Toast.LENGTH_SHORT).show()
